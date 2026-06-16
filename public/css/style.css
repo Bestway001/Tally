@@ -168,3 +168,10 @@ body {
 
 .muted-note { font-size: 12px; color: var(--muted); text-align: center; margin-top: 6px; }
 .hidden { display: none !important; }
+.fb-fab { position: fixed; right: 18px; bottom: 18px; z-index: 50; background: var(--green); color: #fff; border: none; border-radius: 99px; padding: 12px 18px; font-size: 14px; font-family: inherit; cursor: pointer; box-shadow: var(--shadow); display: flex; align-items: center; gap: 7px; }
+.fb-fab:hover { background: #094c30; }
+.fb-overlay { position: fixed; inset: 0; background: rgba(26,26,23,0.45); display: flex; align-items: center; justify-content: center; z-index: 60; padding: 20px; }
+.fb-modal { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 440px; box-shadow: var(--shadow); }
+.fb-modal h2 { font-size: 17px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+.fb-modal h2 .ic { color: var(--green); }
+.fb-modal textarea { width: 100%; resize: vertical; font-family: inherit; }

@@ -5,6 +5,7 @@ import { renderCGPA } from "./cgpa.js";
 import { renderStudy } from "./study.js";
 import { renderBudget } from "./budget.js";
 import { renderTarget } from "./target.js";
+import { setupFeedback } from "./feedback.js";
 
 const app = document.getElementById("app");
 const state = { user: null, tab: "cgpa" };
@@ -79,11 +80,13 @@ function showApp() {
       state.tab = b.dataset.tab;
       paintTabs();
       drawTab();
+      // setupFeedback();
     }),
   );
 
   paintTabs();
   drawTab();
+  setupFeedback();
 }
 
 async function boot() {
@@ -93,6 +96,8 @@ async function boot() {
     showApp();
   } catch {
     logout();
+    document.getElementById("fb-fab")?.remove();
+    document.getElementById("fb-overlay")?.remove();
   }
 }
 

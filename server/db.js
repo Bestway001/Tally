@@ -42,14 +42,12 @@ export async function initDb() {
       subject  TEXT    NOT NULL,
       hours    REAL    NOT NULL
     );
-
-    CREATE TABLE IF NOT EXISTS expenses (
-      id          SERIAL PRIMARY KEY,
-      user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      description TEXT    NOT NULL,
-      amount      REAL    NOT NULL,
-      category    TEXT    NOT NULL,
-      spent_on    TEXT    NOT NULL DEFAULT to_char(now(), 'YYYY-MM-DD')
+     CREATE TABLE IF NOT EXISTS feedback (
+      id         SERIAL PRIMARY KEY,
+      user_id    INTEGER,
+      matric     TEXT,
+      message    TEXT NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT now()
     );
   `);
 }

@@ -9,6 +9,7 @@ import users from "./routes/users.js";
 import courses from "./routes/courses.js";
 import study from "./routes/study.js";
 import expenses from "./routes/expenses.js";
+import feedback from "./routes/feedback.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -21,6 +22,7 @@ app.use("/api", users);
 app.use("/api/courses", courses);
 app.use("/api/study", study);
 app.use("/api/expenses", expenses);
+app.use("/api/feedback", feedback);
 
 app.use(express.static(join(__dirname, "..", "public")));
 
