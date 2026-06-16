@@ -1,5 +1,5 @@
 import { Router } from "express";
-import db from "../db.js";
+import { get } from "../db.js";
 import {
   hashPassword,
   checkPassword,
@@ -23,7 +23,7 @@ function publicUser(u) {
   };
 }
 
-router.post("/signup", (req, res) => {
+router.post("/signup", async (req, res) => {
   const { name, university, department, matric, password, scale, entryLevel } =
     req.body;
 
@@ -33,21 +33,19 @@ router.post("/signup", (req, res) => {
       .json({ error: "Name, matric number, and password are required." });
   }
 
-  const existing = db
-    .prepare("SELECT id FROM users WHERE matric = ?")
-    .get(matric.toUpperCase());
+  const existing = await get("SELECT id FROM users WHERE matric = $1", [
+    matric.toUpperCase(),
+  ]);
   if (existing) {
     return res
       .status(409)
       .json({ error: "An account with this matric number already exists." });
   }
 
-  const info = db
-    .prepare(
-      `INSERT INTO users (name, university, department, matric, password_hash, scale, current_level)
-              VALUES (?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .run(
+  const user = await get(
+    `INSERT INTO users (name, university, department, matric, password_hash, scale, current_level)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+    [
       name,
       university || null,
       department || null,
@@ -55,19 +53,17 @@ router.post("/signup", (req, res) => {
       hashPassword(password),
       Number(scale) || 5,
       Number(entryLevel) || 100,
-    );
+    ],
+  );
 
-  const user = db
-    .prepare("SELECT * FROM users WHERE id = ?")
-    .get(info.lastInsertRowid);
   res.status(201).json({ token: createToken(user), user: publicUser(user) });
 });
 
-router.post("/login", (req, res) => {
+router.post("/login", async (req, res) => {
   const { matric, password } = req.body;
-  const user = db
-    .prepare("SELECT * FROM users WHERE matric = ?")
-    .get((matric || "").toUpperCase());
+  const user = await get("SELECT * FROM users WHERE matric = $1", [
+    (matric || "").toUpperCase(),
+  ]);
 
   if (!user || !checkPassword(password, user.password_hash)) {
     return res
@@ -78,8 +74,8 @@ router.post("/login", (req, res) => {
   res.json({ token: createToken(user), user: publicUser(user) });
 });
 
-router.get("/me", requireAuth, (req, res) => {
-  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(req.user.id);
+router.get("/me", requireAuth, async (req, res) => {
+  const user = await get("SELECT * FROM users WHERE id = $1", [req.user.id]);
   if (!user)
     return res
       .status(401)
@@ -87,27 +83,26 @@ router.get("/me", requireAuth, (req, res) => {
   res.json({ user: publicUser(user) });
 });
 
-router.patch("/me", requireAuth, (req, res) => {
+router.patch("/me", requireAuth, async (req, res) => {
   const { currentLevel, monthlyBudget, scale, budgetMonth } = req.body;
-  const user = db.prepare("SELECT * FROM users WHERE id = ?").get(req.user.id);
+  const user = await get("SELECT * FROM users WHERE id = $1", [req.user.id]);
   if (!user)
     return res
       .status(401)
       .json({ error: "Account not found. Please sign in again." });
 
-  db.prepare(
-    "UPDATE users SET current_level = ?, monthly_budget = ?, scale = ?, budget_month = ? WHERE id = ?",
-  ).run(
-    currentLevel ?? user.current_level,
-    monthlyBudget ?? user.monthly_budget,
-    scale ?? user.scale,
-    budgetMonth ?? user.budget_month,
-    req.user.id,
+  const updated = await get(
+    `UPDATE users SET current_level = $1, monthly_budget = $2, scale = $3, budget_month = $4
+     WHERE id = $5 RETURNING *`,
+    [
+      currentLevel ?? user.current_level,
+      monthlyBudget ?? user.monthly_budget,
+      scale ?? user.scale,
+      budgetMonth ?? user.budget_month,
+      req.user.id,
+    ],
   );
 
-  const updated = db
-    .prepare("SELECT * FROM users WHERE id = ?")
-    .get(req.user.id);
   res.json({ user: publicUser(updated) });
 });
 

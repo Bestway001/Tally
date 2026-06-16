@@ -1,34 +1,37 @@
-import { Router } from 'express';
-import db from '../db.js';
-import { requireAuth } from '../auth.js';
+import { Router } from "express";
+import { get, all, run } from "../db.js";
+import { requireAuth } from "../auth.js";
 
 const router = Router();
 router.use(requireAuth);
 
-router.get('/', (req, res) => {
-  const logs = db
-    .prepare('SELECT * FROM study_logs WHERE user_id = ? ORDER BY log_date DESC, id DESC')
-    .all(req.user.id);
+router.get("/", async (req, res) => {
+  const logs = await all(
+    "SELECT * FROM study_logs WHERE user_id = $1 ORDER BY log_date DESC, id DESC",
+    [req.user.id],
+  );
   res.json({ logs });
 });
 
-router.post('/', (req, res) => {
+router.post("/", async (req, res) => {
   const { logDate, subject, hours } = req.body;
-
   if (!logDate || !subject || hours == null) {
-    return res.status(400).json({ error: 'Date, subject, and hours are required.' });
+    return res
+      .status(400)
+      .json({ error: "Date, subject, and hours are required." });
   }
-
-  const info = db
-    .prepare('INSERT INTO study_logs (user_id, log_date, subject, hours) VALUES (?, ?, ?, ?)')
-    .run(req.user.id, logDate, subject, hours);
-
-  const log = db.prepare('SELECT * FROM study_logs WHERE id = ?').get(info.lastInsertRowid);
+  const log = await get(
+    "INSERT INTO study_logs (user_id, log_date, subject, hours) VALUES ($1, $2, $3, $4) RETURNING *",
+    [req.user.id, logDate, subject, hours],
+  );
   res.status(201).json({ log });
 });
 
-router.delete('/:id', (req, res) => {
-  db.prepare('DELETE FROM study_logs WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id);
+router.delete("/:id", async (req, res) => {
+  await run("DELETE FROM study_logs WHERE id = $1 AND user_id = $2", [
+    req.params.id,
+    req.user.id,
+  ]);
   res.json({ ok: true });
 });
 
