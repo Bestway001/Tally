@@ -33,7 +33,7 @@ function logout() {
 
 function drawTab() {
   const root = document.getElementById("tab-content");
-  root.innerHTML = '<p class="empty">Loading…</p>';
+  root.innerHTML = '<div class="loading-spin"></div>';
   if (state.tab === "cgpa") renderCGPA(root, state, refreshUser);
   else if (state.tab === "study") renderStudy(root, state);
   else if (state.tab === "budget") renderBudget(root, state, refreshUser);
